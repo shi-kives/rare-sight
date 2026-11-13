@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-def sample_episode(dataset, class_index, base_classes, n_way, k_shot, q_query, device):
+def sample_episode(dataset, class_index, base_classes, n_way, k_shot, q_query, device, return_classes = False):
     '''
     Task -- Repeatedly construct few-shot learning episodes of form:
     1 Episode:
@@ -9,9 +9,15 @@ def sample_episode(dataset, class_index, base_classes, n_way, k_shot, q_query, d
     Query Set - N * Q predictions
     '''
 
-    episode_classes = np.random.choice(base_classes, size = n_way, replace = False)
+    rng = np.random.default_rng(42)
+    episode_classes = rng.choice(base_classes, size = n_way, replace = False)
     support_images, query_images, query_labels = [], [], []
 
+    assert n_way > 0, "n_way is negative"
+    assert k_shot > 0, "k_shot is negative"
+    assert q_query > 0, "q_query is negative"
+    assert n_way < len(base_classes), "n_way requests more than available number of classes"
+    
     for local_label, global_class in enumerate(episode_classes): # local_label = episode labels like [0, 1, 2]. global_class = randomly selected classes like [3, 1, 2]
 
         pool = class_index[global_class] # get all available samples for selected classes (indices to dataset)
@@ -32,7 +38,7 @@ def sample_episode(dataset, class_index, base_classes, n_way, k_shot, q_query, d
         query_labels.extend([local_label] * q_query) # if local label = 2 and q_query = 5 then append: [2, 2, 2, 2, 2]
 
     support = torch.stack(support_images).to(device) # support images of all n_way classes. shape = (n_way, k_shot, 3, 224, 224)
-    query = torch.cat(query_images).to(device) # concat instead of stack. so shape = (n_way * k_shot, 3, 224, 224)
+    query = torch.cat(query_images).to(device) # concat instead of stack. so shape = (n_way * q_query, 3, 224, 224)
     labels = torch.tensor(query_labels, dtype = torch.long).to(device) # shape = (n_way * q_query)
 
     # validation checks
@@ -42,6 +48,9 @@ def sample_episode(dataset, class_index, base_classes, n_way, k_shot, q_query, d
         raise Exception("out of range labels")
     if labels.shape != (n_way * q_query, ):
         raise Exception("incorrect labels shape. please recheck")
+
+    if return_classes:
+        return support, query, labels, episode_classes
 
     return support, query, labels
 
