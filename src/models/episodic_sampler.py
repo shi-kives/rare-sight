@@ -16,7 +16,7 @@ def sample_episode(dataset, class_index, base_classes, n_way, k_shot, q_query, d
     assert n_way > 0, "n_way is negative"
     assert k_shot > 0, "k_shot is negative"
     assert q_query > 0, "q_query is negative"
-    assert n_way < len(base_classes), "n_way requests more than available number of classes"
+    assert n_way <= len(base_classes), "n_way requests more than available number of classes"
     
     for local_label, global_class in enumerate(episode_classes): # local_label = episode labels like [0, 1, 2]. global_class = randomly selected classes like [3, 1, 2]
 

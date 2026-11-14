@@ -16,7 +16,7 @@ DATA_DIR = ROOT / "data"
 RAW_DIR = DATA_DIR / "raw"
 SUPPORT_DIR = DATA_DIR / "support"
 SPLIT_PATH = DATA_DIR / "split.json"
-MANIFEST_PATH = DATA_DIR / "manifests" / "support_manifest.json"
+MANIFEST_PATH = DATA_DIR / "support_manifest.json"
 
 def load_datasets():
     print("starting downloads")

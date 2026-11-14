@@ -5,12 +5,11 @@ from medmnist import PathMNIST
 from torchvision import transforms
 from src.models.episodic_sampler import sample_episode
 
-
 @pytest.fixture(scope="module")
 def pathmnist_data():
 
     transform = transforms.Compose([transforms.ToTensor()])
-    dataset = PathMNIST(split="train", root="data/raw", download=True, transform=transform)
+    dataset = PathMNIST(split="train", root="data/raw", download=False, transform=transform, size=224)
 
     # Build global class -> dataset indices mapping.
     labels = np.asarray(dataset.labels).reshape(-1)
@@ -27,8 +26,8 @@ def test_pathmnist_episode_shapes(pathmnist_data):
 
     support, query, labels, episode_classes = sample_episode(dataset=dataset,class_index=class_index, base_classes=base_classes, n_way=5, k_shot=5, q_query=15, device="cpu", return_classes=True)
 
-    assert support.shape == (5, 5, 3, 28, 28)
-    assert query.shape == (75, 3, 28, 28)
+    assert support.shape == (5, 5, 3, 224, 224)
+    assert query.shape == (75, 3, 224, 224)
     assert labels.shape == (75,)
 
     assert len(episode_classes) == 5

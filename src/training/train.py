@@ -16,6 +16,8 @@ from src.models.embedding_generator import EmbeddingGenerator
 from src.models.proto_net import prototypical_loss
 from src.evaluation.evaluate import evaluate
 
+mlflow.set_tracking_uri("http://127.0.0.1:8080")
+mlflow.set_experiment("/training-eval")
 
 SEED = 42
 
@@ -29,7 +31,7 @@ def set_seed(seed):
 
 set_seed(SEED)
 
-with open('data/processed/splits/medmnist_split.json', 'r', encoding = 'utf-8') as file:
+with open('data/split.json', 'r', encoding = 'utf-8') as file:
     data = json.load(file)
     print("data loaded: ", data)
 
