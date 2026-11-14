@@ -109,9 +109,9 @@ def train():
             print(f"-- epoch {epoch + 1}/{CONFIG['n_epochs']} --")
             print(f"training loss: {train_loss:.4f}, training accuracy: {train_accuracy:.4f}, validation accuracy: {val_accuracy:.4f} +- {val_conf_int:.4f}")
             print("classification metrics: ")
-            print("F1-Score: ", val_metrics['macro_f1'])
-            print("Per-Class Recall: ", val_metrics['per_class_recall'])
-            print("Per-Class Precision: ", val_metrics['per_class_recall'])
+            print(f"F1-Score: {val_metrics['macro_f1']:.4f}")
+            print(f"Per-Class Recall: {val_metrics['per_class_recall']}")
+            print(f"Per-Class Precision: {val_metrics['per_class_recall']}")
             print("Confusion Matrix: ")
             print(val_metrics['confusion_matrix'])
 
@@ -133,7 +133,7 @@ def train():
                 for class_id, value in val_metrics['per_class_precision'].items()
             }, step=epoch)
 
-            mlflow.log_figure(fig, "val confusion matrix")
+            mlflow.log_figure(fig, f"val_conf_mat_{epoch}")
 
             plt.close(fig)
             model_path = f"models/best_model_{CONFIG['backbone']}.pt"
