@@ -36,7 +36,7 @@ with open('data/split.json', 'r', encoding = 'utf-8') as file:
     print("data loaded: ", data)
 
 CONFIG = {
-    'backbone': 'resnet18',
+    'backbone': 'efficientnet_b3',
     'embed_dim': 128,
     'n_way': 5,
     'k_shot': 5,
@@ -111,7 +111,7 @@ def train():
             print("classification metrics: ")
             print(f"F1-Score: {val_metrics['macro_f1']:.4f}")
             print(f"Per-Class Recall: {val_metrics['per_class_recall']}")
-            print(f"Per-Class Precision: {val_metrics['per_class_recall']}")
+            print(f"Per-Class Precision: {val_metrics['per_class_precision']}")
             print("Confusion Matrix: ")
             print(val_metrics['confusion_matrix'])
 
@@ -136,7 +136,6 @@ def train():
             mlflow.log_figure(fig, f"val_conf_mat_{epoch}.png")
 
             plt.close(fig)
-            model_path = f"models/best_model_{CONFIG['backbone']}.pt"
             if val_accuracy > best_val_accuracy:
                 best_val_accuracy = val_accuracy
 
@@ -148,7 +147,8 @@ def train():
                     "seed": 42
                 }
                 
-                os.makedirs("models", exist_ok=True)
+                model_path = f"results/models/best_model_{CONFIG['backbone']}.pt"
+                os.makedirs(os.path.dirname(model_path), exist_ok=True)
                 torch.save(checkpoint, model_path)
                 print(f"saved best model with val accuracy: {val_accuracy:.4f}")
 
@@ -187,11 +187,11 @@ def evaluate_test():
         print(f"3-way 5-shot: {test_metrics_5shot['per_class_recall']}")
         print(f"3-way 1-shot: {test_metrics_1shot['per_class_recall']}")
 
-        print("3. Per-Class Recall")
+        print("4. Per-Class Precision")
         print(f"3-way 5-shot: {test_metrics_5shot['per_class_precision']}")
         print(f"3-way 1-shot: {test_metrics_1shot['per_class_precision']}")
 
-        print("3. Per-Class Recall")
+        print("5. Confusion Matrix")
         print(f"3-way 5-shot: \n{test_metrics_5shot['confusion_matrix']}")
         print(f"3-way 1-shot: \n{test_metrics_1shot['confusion_matrix']}")
 
@@ -220,5 +220,5 @@ def evaluate_test():
         plt.close(fig2)
 
 if __name__ == '__main__':
-    # train()
+    train()
     evaluate_test()

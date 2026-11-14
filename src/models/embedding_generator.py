@@ -3,7 +3,7 @@ import torch.nn as nn
 
 class EmbeddingGenerator(nn.Module):
 
-    def __init__(self, backbone = 'resnet18', embed_dim = 128):
+    def __init__(self, backbone = 'resnet18', embed_dim = 128, pretrained = True):
         super().__init__() # for self.backbone & self.projection
 
         self.backbone = timm.create_model(model_name=backbone, pretrained=True, num_classes=0) # hold pretrained weights instead of random, removes classification head.
@@ -27,8 +27,9 @@ class EmbeddingGenerator(nn.Module):
     def train(self, mode=True):
         super().train(mode)
 
-        if not any(p.requires_grad for p in self.backbone.parameters()):
-            self.backbone.eval()
+        for module in self.backbone.modules():
+            if isinstance(module, nn.BatchNorm2d):
+                module.eval()
 
         return self
 

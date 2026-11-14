@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-def sample_episode(dataset, class_index, base_classes, n_way, k_shot, q_query, device, return_classes = False):
+def sample_episode(dataset, class_index, base_classes, n_way, k_shot, q_query, device, return_classes = False, rng = None):
     '''
     Task -- Repeatedly construct few-shot learning episodes of form:
     1 Episode:
@@ -9,7 +9,8 @@ def sample_episode(dataset, class_index, base_classes, n_way, k_shot, q_query, d
     Query Set - N * Q predictions
     '''
 
-    rng = np.random.default_rng(42)
+    if rng is None:
+        rng = np.random.default_rng()
     episode_classes = rng.choice(base_classes, size = n_way, replace = False)
     support_images, query_images, query_labels = [], [], []
 
@@ -26,7 +27,7 @@ def sample_episode(dataset, class_index, base_classes, n_way, k_shot, q_query, d
         if len(pool) < total:
             raise ValueError(f"enough images not available! reduce k or q. need {total}, but have {len(pool)}")
 
-        chosen = np.random.choice(pool, size = total, replace = False)
+        chosen = rng.choice(pool, size = total, replace = False)
         support_indices = chosen[:k_shot]
         query_indices = chosen[k_shot:]
 
@@ -56,7 +57,7 @@ def sample_episode(dataset, class_index, base_classes, n_way, k_shot, q_query, d
 
 class EpisodeLoader: # analogous to pytorch DataLoader, but creates episodes instead of mini-batches.
 
-    def __init__(self, dataset, class_index, base_classes, n_way, k_shot, q_query, episodes_per_epoch, device):
+    def __init__(self, dataset, class_index, base_classes, n_way, k_shot, q_query, episodes_per_epoch, device, seed = 42):
 
         self.dataset = dataset
         self.class_index = class_index
@@ -66,10 +67,11 @@ class EpisodeLoader: # analogous to pytorch DataLoader, but creates episodes ins
         self.q_query = q_query
         self.episodes_per_epoch = episodes_per_epoch
         self.device = device
+        self.rng = np.random.default_rng(seed)
 
     def __len__(self):
         return self.episodes_per_epoch
 
     def __iter__(self):
         for _ in range(self.episodes_per_epoch):
-            yield sample_episode(self.dataset, self.class_index, self.base_classes, self.n_way, self.k_shot, self.q_query, self.device) # generates new random episode each iteration.
+            yield sample_episode(self.dataset, self.class_index, self.base_classes, self.n_way, self.k_shot, self.q_query, self.device, rng = self.rng) # generates new random episode each iteration.
