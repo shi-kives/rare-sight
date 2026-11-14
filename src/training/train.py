@@ -133,7 +133,7 @@ def train():
                 for class_id, value in val_metrics['per_class_precision'].items()
             }, step=epoch)
 
-            mlflow.log_figure(fig, f"val_conf_mat_{epoch}")
+            mlflow.log_figure(fig, f"val_conf_mat_{epoch}.png")
 
             plt.close(fig)
             model_path = f"models/best_model_{CONFIG['backbone']}.pt"
