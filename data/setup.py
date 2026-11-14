@@ -1,5 +1,4 @@
 from medmnist import PathMNIST
-import shutil
 import os
 from pathlib import Path
 import numpy as np
