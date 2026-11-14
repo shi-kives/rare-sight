@@ -166,7 +166,9 @@ def evaluate_test():
         test_class_idx = build_class_index(dataset = test_dataset)
 
         model_path = f"models/best_model_{CONFIG['backbone']}.pt"
-        model.load_state_dict(torch.load(model_path, map_location=device))
+        checkpoint = torch.load(model_path, map_location=device)
+        model.load_state_dict(checkpoint["model_state_dict"])
+        model.eval()
 
         test_acc_5shot, test_ci_5shot, test_metrics_5shot = evaluate(model = model, dataset = test_dataset, class_index = test_class_idx, available_classes = CONFIG['novel_classes'], n_way = 3, k_shot = 5, q_query = 15, n_episodes = 600, device = device)
 
@@ -207,13 +209,15 @@ def evaluate_test():
         mlflow.log_metric('test_ci_3way_1shot', test_ci_1shot)
         mlflow.log_metric('test_mf1_3way_5shot', test_metrics_5shot['macro_f1'])
         mlflow.log_metric('test_mf1_3way_5shot', test_metrics_1shot['macro_f1'])
-        mlflow.log_metrics(test_metrics_5shot['per_class_recall'])
-        mlflow.log_metrics(test_metrics_5shot['per_class_precision'])
-        mlflow.log_figure(fig1, "test 5 shot confusion matrix")
-        mlflow.log_metrics(test_metrics_1shot['per_class_recall'])
-        mlflow.log_metrics(test_metrics_1shot['per_class_precision'])
-        mlflow.log_figure(fig2, "test 1 shot confusion matrix")
+        mlflow.log_metrics({f"test_5shot_recall_{k}": float(v) for k, v in test_metrics_5shot['per_class_recall'].items()})
+        mlflow.log_metrics({f"test_5shot_precision_{k}": float(v) for k, v in test_metrics_5shot['per_class_precision'].items()})
+        mlflow.log_figure(fig1, "test_5shot_cm.png")
+        mlflow.log_metrics({f"test_5shot_recall_{k}": float(v) for k, v in test_metrics_1shot['per_class_recall'].items()})
+        mlflow.log_metrics({f"test_5shot_precision_{k}": float(v) for k, v in test_metrics_1shot['per_class_precision'].items()})
+        mlflow.log_figure(fig2, "test_1shot_cm.png")
 
+        plt.close(fig1)
+        plt.close(fig2)
 
 if __name__ == '__main__':
     train()
