@@ -56,8 +56,8 @@ def train():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print("training on device: ", device)
 
-    train_dataset = PathMNISTDataset('train', transform = get_transform('path', 'train'))
-    val_dataset = PathMNISTDataset('val', transform = get_transform('path', 'test'))
+    train_dataset = PathMNISTDataset('train', transform = get_transform('path', 'train'), size = 224, root = 'data/raw/')
+    val_dataset = PathMNISTDataset('val', transform = get_transform('path', 'test'), size = 224, root = 'data/raw/')
 
     train_class_idx = build_class_index(train_dataset)
     val_class_idx = build_class_index(val_dataset)
@@ -124,10 +124,18 @@ def train():
             mlflow.log_metric('val_accuracy', val_accuracy, step = epoch)
             mlflow.log_metric('val_ci_half_width', val_conf_int, step = epoch)
             mlflow.log_metric('val_f1', val_metrics['macro_f1'], step = epoch)
-            mlflow.log_metrics(val_metrics['per_class_recall'])
-            mlflow.log_metrics(val_metrics['per_class_precision'])
+            mlflow.log_metrics({
+                f"val_recall_class_{class_id}": float(value)
+                for class_id, value in val_metrics['per_class_recall'].items()
+            }, step=epoch)
+            mlflow.log_metrics({
+                f"val_precision_class_{class_id}": float(value)
+                for class_id, value in val_metrics['per_class_precision'].items()
+            }, step=epoch)
+            
             mlflow.log_figure(fig, "val confusion matrix")
 
+            plt.close(fig)
             model_path = f"models/best_model_{CONFIG['backbone']}.pt"
             if val_accuracy > best_val_accuracy:
                 best_val_accuracy = val_accuracy
