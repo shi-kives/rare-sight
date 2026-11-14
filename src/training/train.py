@@ -56,8 +56,8 @@ def train():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print("training on device: ", device)
 
-    train_dataset = PathMNISTDataset('train', transform = get_transform('path', 'train'), size = 224, root = 'data/raw/')
-    val_dataset = PathMNISTDataset('val', transform = get_transform('path', 'test'), size = 224, root = 'data/raw/')
+    train_dataset = PathMNISTDataset('train', transform = get_transform('path', 'train'))
+    val_dataset = PathMNISTDataset('val', transform = get_transform('path', 'test'))
 
     train_class_idx = build_class_index(train_dataset)
     val_class_idx = build_class_index(val_dataset)
@@ -132,7 +132,7 @@ def train():
                 f"val_precision_class_{class_id}": float(value)
                 for class_id, value in val_metrics['per_class_precision'].items()
             }, step=epoch)
-            
+
             mlflow.log_figure(fig, "val confusion matrix")
 
             plt.close(fig)
