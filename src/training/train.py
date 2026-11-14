@@ -165,8 +165,8 @@ def evaluate_test():
         test_dataset = PathMNISTDataset(split = 'test', transform = get_transform('path', 'test'))
         test_class_idx = build_class_index(dataset = test_dataset)
 
-        model_path = f"models/best_model_{CONFIG['backbone']}.pt"
-        checkpoint = torch.load(model_path, map_location=device)
+        model_path = f"results/models/best_model_{CONFIG['backbone']}.pt"
+        checkpoint = torch.load(model_path, map_location=device, weights_only=False)
         model.load_state_dict(checkpoint["model_state_dict"])
         model.eval()
 
@@ -220,5 +220,5 @@ def evaluate_test():
         plt.close(fig2)
 
 if __name__ == '__main__':
-    train()
+    # train()
     evaluate_test()
