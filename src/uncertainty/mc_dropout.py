@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+DROPOUT_LAYERS = (nn.Dropout, nn.Dropout1d, nn.Dropout2d, nn.Dropout3d, nn.AlphaDropout, nn.FeatureAlphaDropout)
 
 def enable_dropout(model: nn.Module):
     """
@@ -9,8 +10,9 @@ def enable_dropout(model: nn.Module):
     modules in evaluation mode.
     """
     for module in model.modules():
-        if isinstance(module, nn.Dropout):
+        if isinstance(module, DROPOUT_LAYERS):
             module.train()
+
 
 def mc_predict(model: nn.Module, image_tensor: torch.Tensor, n_runs: int = 30, device: torch.device = None):
     if n_runs < 2:
@@ -33,6 +35,9 @@ def mc_predict(model: nn.Module, image_tensor: torch.Tensor, n_runs: int = 30, d
     if image_tensor.shape[0] != 1:
         raise ValueError("mc_predict currently accepts one image at a time.")
 
+    if not image_tensor.is_floating_point():
+        raise TypeError("image_tensor must contain floating-point values.")
+
     image_tensor = image_tensor.to(device)
 
     original_modes = {module: module.training for module in model.modules()}
@@ -46,10 +51,16 @@ def mc_predict(model: nn.Module, image_tensor: torch.Tensor, n_runs: int = 30, d
             for _ in range(n_runs):
                 embedding = model(image_tensor)
 
+                if not isinstance(embedding, torch.Tensor):
+                    raise TypeError("Model must return a torch.Tensor.")
+
                 if embedding.ndim != 2 or embedding.shape[0] != 1:
                     raise ValueError("Model must return an embedding of shape (1, embed_dim).")
 
-                run_embeddings.append(embedding[0].detach().cpu())
+                if not torch.isfinite(embedding).all():
+                    raise ValueError("Model returned non-finite embeddings.")
+
+                run_embeddings.append(embedding[0].cpu())
 
     finally:
         for module, training_mode in original_modes.items():
@@ -72,6 +83,9 @@ def mc_predict(model: nn.Module, image_tensor: torch.Tensor, n_runs: int = 30, d
 
 
 def calibrate_mc_threshold(model: nn.Module, val_images, n_runs: int = 30, percentile: float = 95.0, device: torch.device = None):
+    if n_runs < 2:
+        raise ValueError("n_runs must be at least 2.")
+
     if not 0 < percentile < 100:
         raise ValueError("percentile must be between 0 and 100.")
 
@@ -91,3 +105,12 @@ def calibrate_mc_threshold(model: nn.Module, val_images, n_runs: int = 30, perce
 
     print(f"Monte Carlo dropout threshold ({percentile}th percentile): {threshold:.6f}")
     return threshold
+
+def apply_uncertainty_threshold(variance: float, threshold: float):
+    if not np.isfinite(variance) or not np.isfinite(threshold):
+        raise ValueError("Variance and threshold must be finite.")
+
+    if variance < 0 or threshold < 0:
+        raise ValueError("Variance and threshold must be non-negative.")
+
+    return variance > threshold
