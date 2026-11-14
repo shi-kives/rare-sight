@@ -16,7 +16,7 @@ from src.models.embedding_generator import EmbeddingGenerator
 from src.models.proto_net import prototypical_loss
 from src.evaluation.evaluate import evaluate
 
-mlflow.set_tracking_uri("http://127.0.0.1:8080")
+mlflow.set_tracking_uri("sqlite:///mlflow.db")
 mlflow.set_experiment("/training-eval")
 
 SEED = 42
