@@ -56,7 +56,7 @@ def overall_uncertainty(confidence, margin, distance_flag, retrieval_agreement, 
     if retrieval_agreement < 0.4:
         weak_signals.append(f"mixed retrieval: {retrieval_agreement:.0%}")
 
-    if not agrees:
+    if agrees is False:
         weak_signals.append("prototype and retrieval engine disagree on class prediction.")
 
     n_weak = len(weak_signals)
